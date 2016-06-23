@@ -1,0 +1,497 @@
+
+拉代码
+在磁盘中新建一个目录，目录名为项目名
+1. //下载脚本
+curl http://192.168.1.29/repo/repo >repo
+2. //获取权限
+ chmod +x repo
+3. // 初始化repo
+		./repo init -u http://192.168.1.29/repo/hct-mtk/hct6753-65t-m0-mp1-v2.39.1/manifests.git/
+4. //同步版本的master分支到本地
+./repo sync
+5. //同步所有分支到本地
+./distribute --update --all
+
+也可一次性输入：
+curl http://192.168.1.29/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.29/repo/hct-mtk/hct6753-65t-m0-mp1-v2.39.1/manifests.git/ && ./repo sync && ./distribute --update --all
+
+下载具体分支并编译
+6. //下载具体分支
+./distribute --init dists/targets/t823_33pgu_128g8g && //注释 下载具体的分支
+7. //copy
+./distribute -p dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd
+8. //编译
+./distribute --mtkt new
+9. //只是为了将out里面的东西打包，最后生成我们要的文件
+ ./distribute -b
+
+也可一次性输入：编译eng版本
+sleep 5h ./distribute --init dists/targets/t637_63pu_64g8gDiscrete && ./distribute -p dists/targets/t637_63pu_64g8gDiscrete/hct_t637a_dh_g438a_bom3_prot && ./distribute --mtkt new && ./distribute -b
+
+./distribute --init 进行了两步操作  完成之后会生成一个文件local_mainfest.xml 文件然后执行 ./distribute --add 
+./distribute --add dists/targets/t89_35mgu_128g16g  
+
+单模块编译：只使用于更改apk文件，
+1.  ./distribute --mtkt mmm 文件路径    比如： ./distribute --mtkt mmm packages/apps/Music
+2. adb remout      // 重新挂载,使得system等具有读写权限
+3. adb push 当前对象 目标路径 比如： adb push out/target/product/hct6735m_35gu_l1/system/app/Music/Music.apk  system/app/Music  
+
+ adb pull /storage/sdcard0/mtklog/ /home/qiaojiali/   将手机上文件导入到电脑
+ adb push /home/qiaojiali/readme_9.txt /storage/sdcard0/DCIM/Camera/  把电脑上的文件导入到手机 
+
+adb是android SDK提供的一个可以连接本机和目标设备的命令行调试工具，在开发中经常使用以提高效率，记录分享一下
+1、adb start-server 开启adb服务
+2、adb kill-server 终止adb服务
+3、adb devices 列出可连接设备，包括真机和虚拟机
+4、adb install <pkg file name> 安装指定的apk到连接的设备上
+5、adb install -r <pkg file name> 安装指定的apk到连接的设备上，并保留原有apk的数据
+6、adb push <local> <remote> 将本机的文件或目录拷贝到目标设备指定的路径下
+7、adb pull <remote> <local> 和6命令刚好相反
+8、adb shell 进入连接的手机的linux环境下，可用使用部分linux命令
+9、adb shell pm list packages 列出目标设备中所有apk的包名
+10、adb shell pm list permissions 列出目标设备中使用的所有权限
+11、adb shell pm list feature 列出目标设备中所有的feature
+12、adb shell dumpsys activity 列出目标设备上activity栈和task任务信息，还有其他一下相关信息
+13、adb shell am start -n packageName/.className 启动对应的activity
+14、adb还有三个重要的参数，-d、-e、-s
+       -d 连接的目标设备为唯一的真机    eg: adb -d install ***.apk
+       -e 连接的目标设备为唯一的虚拟机  eg: adb -e shell 
+       -s <specific device> 指定设备  eg: adb -s 真机名称 install ***.apk
+
+修改代码相关操作（所有的都在develop分支下执行）
+1.  修改完代码之后   
+3.  在自己分支路径下 查看修改的状态：    git  status  （在分支上查看状态）
+4.  在自己分支路径下 添加修改的内容：  git add 文件名（此处需要注意分支要在develop分支下）
+5.  在自己分支路径下 提交代码：   git commit -m "develop:本次需要提交的注释"  比如： git commit -m "develop:update theme"  
+6.  ./repo download -m --br develop dists/targets/t637_33pgu_64g8gDiscrete 更新一下该库的代码，否则提交的时候，由于本地代码与git库代码更新不同时会error   
+7.  提交到服务器git库   ./repo upload --br develop dists/targets/t89_35mgu_128g16g/   所有的操作都在分支执行 ./repo 脚本upload上传    --br develop 把代码提交在哪个分支
+
+服务器编译发布版本步骤：
+1.   ./distribute --clean   如果服务器之前的代码编译过要先执行
+2.   ./distribute --update --br develop 
+3.   ./distribute -p dists/targets/t89_35mgu_128g16g/t89b-otd-s557-cronic-hd-33gu-128g16g --auto && ./distribute -b 
+4.   ./distribute -b 
+5.   source build/envsetup.sh 列表  
+6    lunch full_hct6735m_35gu_l-user    （cat dists.log（查看lunch具体））   
+7    make otapackage && ./distribute -b    ota包
+
+分支命名规范：   t89b   -    otd   -   s557    -    my    -     hd   -       33gu  -     128g16g   
+                 |
+           豪成项目编号    客户    客户项目编号   手机分辨率    射频制式      flash类型        flash值  
+  
+projectconfig位置
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1
+
+将桌面系统改为原生系统
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1  修改目录下的projectconfig文件里面所有的hct打头的文件
+
+开机logo更改
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/bootable/bootloader/lk/dev/logo/ct_lte_hd720
+
+一、开机动画：
+1) 制作bootanimation.zip。制作方法举例如下： 
+   分别创建名为“part0”和“part1”的文件夹以及一个名为“desc.txt”文件。“part0”中存储动画的第一阶段的资源图片，“part1”存储第二阶段的资源图片，注意图片为png格式。 
+ 
+  播放控制由“desc.txt”指定，内容如下：
+    320 480 30
+    p 1 0 part0
+    p 0 0 part1
+ 
+  各参数功能如下： ( 注意：desc.txt文本内容必须用单个空格隔开，且不能有多余空行。)
+ 
+320
+480
+30
+ 
+宽
+高
+每秒播放帧数
+ 
+p
+1
+0
+part0
+标志符
+循环次数
+阶段切换间隔时间
+对应目录名
+p
+0
+0
+part1
+标志符
+循环次数
+阶段切换间隔时间
+对应目录名
+ 
+  最后，将这三个组件通过存储压缩的方式压缩为bootanimation.zip文件即制作完成。 
+ 
+2) 预置开机动画。预置的过程如下： 
+   将制作完成的bootanimation.zip文件放在工程的资源目录下，如frameworks\base\data\sounds目录下，修改Android.mk文件，通过以下语句将该压缩包打到system\medial\路径下： $(LOCAL_PATH)/bootanimation.zip:system/media/bootanimation.zip 
+   然后再次build工程即可。
+
+压缩开关机动画终端执行：zip -0 aliyun_shutanimation.zip -r part0 part1 desc.txt
+
+开关机动画
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/vendor/haocheng/proprietary/data/boot-shut
+
+开关机动画开关
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk  文件中更改以下变量
+HCT_BOOTANIM = yes  //开机动画
+HCT_BOOTAUDIO = yes  //开机铃声
+HCT_SHUTANIM = yes  //关机动画
+HCT_SHUTAUDIO = yes  //关机铃声  的值
+
+更改默认的铃声
+更改/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk文件中的以下变变量：
+HCT_NOTIFICATION_SOUND = bamboo.ogg  //默认短信铃声
+HCT_ALARM_ALERT = Helium.ogg   // 默认闹钟铃声
+HCT_RINGTONE = Callisto.ogg   // 默认来电铃声  的值
+
+更改默认时区
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+文件中HCT_PRODUCT_TIMEZONE = Europe/London 的值   
+
+短信铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/notifications
+
+闹钟铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/alarms
+
+来电铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/ringtones
+
+修改商标（brand）
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk 
+修改文件中HCT_PRODUCT_BRAND = DOOGEE值
+
+修改手机型号
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk 
+ 修改文件中HCT_PRODUCT_MODEL = T6值
+
+修改制造商MANUFACTURER
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+ 修改文件中HCT_PRODUCT_MANUFACTURER = DOOGEE值
+
+修改默认蓝牙名词
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/custom.conf
+修改文件中bluetooth.HostName = T6值
+
+默认wifi名字修改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/custom.conf  文件中修改
+修改文件中 wlan.SSID = T6值
+
+支持手电筒
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+ 修改文件中HCT_TORCH_SUPPORT = yes的值
+
+默认语言，及支持语言
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/full_hct6735m_35gu_l1.mk
+修改文件中
+ PRODUCT_LOCALES := en_US zh_CN zh_TW es_ES pt_BR ru_RU fr_FR de_DE tr_TR vi_VN ms_MY in_ID th_TH it_IT ar_EG hi_IN bn_IN ur_PK fa_IR pt_PT nl_NL el_GR hu_HU tl_PH ro_RO cs_CZ ko_KR km_KH iw_IL my_MM pl_PL es_US bg_BG hr_HR lv_LV lt_LT sk_SK uk_UA de_AT da_DK fi_FI nb_NO sv_SE en_GB hy_AM zh_HK et_EE ja_JP kk_KZ sr_RS sl_SI ca_ES af_ZA  sw_TZ rm_CH zu_ZA  的值   第一个为默认语言
+
+修改默认的壁纸
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/frameworks/base/core/res/res/drawable-nodpi/default_wallpaper.jpg   
+
+添加墙纸
+1. /code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/packages/apps/Launcher3/WallpaperPicker/res/drawable-nodpi 目录下添加壁纸 
+
+2./code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/packages/apps/Launcher3/WallpaperPicker/res/values-nodpi  目录下wallpapers.xml里面item的值
+
+修改版本号： 
+需要注意： 
+/code/hct6735m-65C-l1-mp3-v1.0/dists/targets/t89_35mgu_128g16g/t89b-otd-s557-my-hd-33gu-128g16g/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/HctSetting/res/values/hct_strings.xml 中的<string name="hct_default_build_name">MYLEAGOO_OS_5.1_Elite 5_R14_0316</string>的值
+/code/hct6735m-65C-l1-mp3-v1.0/dists/targes/t89_35mgu_128g16g/t89b-otd-s557-my-hd-33gu-128g16g/device/haocheng/hct6735m_35gu_l/prjectconfig.mk中
+MTK_BUILD_VERNO = MYLEAGOO_OS_5.1_Elite5_R14_0316
+CUSTOM_BUILD_VERNO = R14的值
+
+工厂测试项目：
+//hall 的更改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/FactoryMode/res/values/config.xml  修改文件中的<bool name="config_hall_available">true</bool>    false改为true
+// OTG 的更改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/FactoryMode/res/values/config.xml
+修改文件中的 <bool name="config_otg_available">true</bool>  false改为true
+
+地磁
+<bool name="config_Msensor_available">false</bool>
+
+红外线
+<bool name="config_support_infrared_sensor">true</bool>
+
+RGB灯
+<bool name="config_threecolorlights_enable">true</bool>
+
+指纹识别
+HCT_SUPPORT_FINGERPRINT_MADEV=yes   此宏是麦瑞维的指纹，每个项目指纹厂家不同，可根据厂家参考薛进发的邮件，邮件有相关厂家指纹的开关
+
+预置APK
+一 .  可卸载   
+以安装Fps2D_3.1.0-LCM apk为例
+1.  找到/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/3rd-party/apk_and_code/dg_t925/data  在此目录下新建一个文件夹与预装的apk名字相同
+2.  把apk文件复制到该文件夹下
+3.  在文件夹下新建Android.mk文件，文件的内容如下：
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+# Module name should match apk name to be installed
+LOCAL_MODULE := Fps2D_3.1.0-LCM
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+ifeq ($(strip $(TARGET_ARCH)), arm64)
+LOCAL_MULTILIB :=32 
+endif 
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_MODULE_PATH := $(TARGET_OUT)/vendor/operator/app
+include $(BUILD_PREBUILT)
+
+4. 修改/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/build  中的target_product.mk文件，在文件中添加如下内容：
+ifeq (yes,$(strip $(HCT_T875_APK)))
+    PRODUCT_PACKAGES += Fps2D_3.1.0-LCM
+endif
+
+5.  修改/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1 中projectconfig.mk 文件，在文件中添加如下内容：
+HCT_SOGOU_APK = yes  //开关
+
+二 . 不可卸载 
+不可卸载 与可卸载 不同点：
+ 1. 第一步新建文件夹的目录不同：/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/3rd-party/apk_and_code/dg_t925/system
+ 2. 第三步中Android.mk文件的内容不同内容如下：
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := ShowInstallPackage
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_TAGS := optional
+LOCAL_BUILT_MODULE_STEM := ShowInstallPackage.apk
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_PRIVILEGED_MODULE := true
+LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+#LOCAL_REQUIRED_MODULES := libFPdevice InLineTool
+include $(BUILD_PREBUILT)
+
+
+linux命令
+打开文件： xdg-open 文件路径   如： xdg-open ./base/core/java/com/android/internal/os/RuntimeInit.java
+
+rm -rf 目录名字/文件名字  彻底删除文件或目录
+
+搜索： grep "要查找的字符串" -r ./     grep "persist.sys.timezone" -r ./   备注： -r 递归     ./当前路径下
+grep -r 查找的字符串 .      
+gedit ./AndroidManifest.xml  打开AndroidManifest.xml文件 
+
+
+history  查看历史命令
+ls  目录下的文件列表
+ll  列出目录下的文件详情
+linux命令
+df -hl 查看磁盘使用情况
+
+find 路径 -name  需要查找的文件
+比如： find /home/qiaojiali/ -name test.xml
+
+git 常用命令
+git add .
+git commit -m "****" //提交到本地
+git  status  //查看状态 分支代码是否修改过
+git diff file   //比较当前文件和暂存区文件差异
+git log  //查看修改记录
+git br -d <branch> //删除某个分支
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/packages/SystemUI/res/values/config.xml  通知栏
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/packages/SystemUI/res/values/hct_config.xml  是否深度清理所有任务
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/core/res/res/values/hct_config.xml 智能唤醒相关开关
+-------------------------------start-----------------------------------------
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="hct_config_launcher_theme" translatable="false">cn.sh.hct.themeNormal</string>
+
+  <bool name="hct_tp_gesture_enable">true</bool>
+
+  <string-array translatable="false" name="config_tpgesture_cchar_entry">
+    <item>"com.android.gallery3d"</item>
+    <item>"com.android.camera.CameraLauncher"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_ochar_entry">
+    <item>"com.android.contacts"</item>
+    <item>"com.android.dialer.DialtactsActivity"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_ochar_entry">
+    <item>"com.android.gallery3d"</item>
+    <item>"com.android.gallery3d.app.GalleryActivity"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_wchar_entry">
+    <item>"com.android.contacts"</item>
+    <item>"com.android.contacts.activities.PeopleActivity"</item>
+  </string-array>
+
+  <bool name="hct_tp_gesture_enable">true</bool>  默认支持只能唤醒
+  <bool name="hct_tp_gesture_zchar_enable">true</bool>
+  <bool name="hct_tp_gesture_mchar_animation_enable">true</bool>
+  <bool name="hct_tp_gesture_vchar_enable">true</bool>
+  <bool name="config_change_rom_size">true</bool>
+  <bool name="config_modify_device_info">true</bool>
+<bool name="config_show_ip_call">false</bool>
+</resources>
+
+--------------------------------end----------------------------------------
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/core/res/res/values/config.xml   
+<bool name="config_hct_volumekey_sound_modify">true</bool> /声音/音量////////////////修//改
+    <bool name="def_vibration_enabled">false</bool>   ///振动启动
+    <bool name="def_haptic_feedback">true</bool>     //触摸回应
+    <bool name="def_dtmf_tone_when_dialing">false</bool>
+    <bool name="def_sound_effects_enabled">false</bool>
+    <integer name="def_lockscreen_sounds_enabled">1</integer>
+
+进入服务器：  ssh release@192.168.1.41 
+服务器用户名： release
+服务器密码： release
+
+软件平台owener
+smb://192.168.1.48/源码文档/文档/HCT/平台相关  下的 软件平台owener
+
+mtk在线支持
+https://sso.mediatek.com/eai/Login.aspx
+
+用户名: zhouhongxuan@hct.sh.cn
+密码: CHENG2007hct
+
+android外单开机logo修改不成功
+需要删除
+hct6753-65C-l1-mp3-v2.0/out/target/product/hct6735_35gu_l1/obj 文件下面的四个文件  重新编译
+
+
+android默认日期的修改
+1. android L （5.1）
+bootable/bootloader/preloader/custom/项目名/inc/cust_rtc.h
+#define RTC_DEFAULT_YEA		2016
+#define RTC_DEFAULT_MTH		1
+#define RTC_DEFAULT_DOM		1
+
+
+修改默认的年份
+/code/6753c-v2.0/hct6753-65C-l1-mp3-v2.0_01/vendor/mediatek/proprietary/frameworks/base/res/res/values/config.xml
+<integer name="default_restore_year">2015</integer>  
+
+android编译：
+source bulid/envsetup.sh 设置android的编译环境
+lunch full_ali6735m...-eng 选择编译的目标
+make Camare 单独编译模块会将相关依赖编译进来 
+mmm Camare 单独编译相机模块（只编译这个模块）单模块编译必须是在已经make之后的环境下才可编译
+抓取log
+adb logcat | grep aaaa
+
+T卡升级包复制到SD里面，插入手机。
+1.手机关机后，按power键+音量上键，启动Recover模式  
+2.进入Recover模式选择apply update from sdcard-选择放在手机内存或SD卡内存里面OTA包，确定就可以了
+(18时06分28秒) 刘月:
+3.等待T卡升级提示成功后，选择reboot system now 重启手机
+
+屏幕分辨率对应表
+240x320	2.6 - 3.0 	Small screen	Low density (120) 	 ldpi
+WQVGA	240x400 	3.2 - 3.5	Normal screen	Low density (120)	 ldpi
+FWQVGA	240x432	3.5 - 3.8	Normal screen	Low density (120)	 ldpi
+HVGA	320x480	3.0 - 3.5	Normal screen	Mediumdensity(160)	 mdpi
+WVGA	480x800	3.3 - 4.0	Normal screen	High density (240)	 hdpi
+FWVGA	480x854	3.5 - 4.0	Normal screen	High density (240)	 hdpi
+WVGA	480x800	4.8 - 5.5	Large screen	Medium density(160)	 mdpi
+FWVGA	480x854	5.0 - 5.8	Large screen	Medium density(160)	 mdpi
+
+
+把用到放在文件夹中修改
+packages/apps/Launcher3/res/xml/default_workspace_4x4.xml
+<folder
+
+    launcher:screen="3"   确认在那个屏
+    launcher:x="0"     x轴所对应的位置
+    launcher:y="3"     y轴所对应的位置
+    launcher:title="@string/folder_name_custom"> 文件名
+
+    <!--First Line-->
+    <!-- Google App-->
+    <favorite
+        launcher:packageName="com.google.android.googlequicksearchbox"  app的包名
+        launcher:className="com.google.android.googlequicksearchbox.SearchActivity"  类名
+        />
+    <!-- Chrome-->
+    
+    <favorite
+        launcher:packageName="com.android.chrome"
+        launcher:className="com.google.android.apps.chrome.Main"
+        />
+    	
+    <!-- Gmail-->
+    <favorite
+        launcher:packageName="com.google.android.gm"
+        launcher:className="com.google.android.gm.ConversationListActivityGmail"
+        />
+
+  </folder>
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+

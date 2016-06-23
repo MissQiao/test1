@@ -1,0 +1,145 @@
+重要通知：登入MTK的所有网站，各位只能用现有的账号及密码登录；任何情况下 ，都不要点击 忘记密码、重置密码。务必注意！！！
+
+Dear all:
+目前登录MTK网站的链接有以下四个，本次更新了online/DCC登入密码、打开PDF文件的新密码；
+1、MTK On-Line(MOL): https://online.mediatek.com
+Login ID : zhouhongxuan@hct.sh.cn
+Password:CHENGhao_963
+
+2、DCC：https://dcc.mediatek.com
+Login ID : zhouhongxuan@hct.sh.cn
+Password:CHENGhao_963
+
+3：由于mtk对PDF密码的管控特殊性，打开pdf的密码我们是不能随便自己设置的，只能根据mtk每次默认的密码去打开pdf文件；因此现在打开39服务器上已有的pdf的文件的密码是：0386743513；5-19号之后从mtk下载的pdf文件打开的话，需要输入新密码：6962843490
+3、Technical issue submit: http://eservice.mediatek.com
+Login ID : robinson_fan_haocheng
+Password : hct3e2w1q
+
+3.1 备用eservice 帐号（遇到robinson_fan_haocheng被锁定时，且正好需要紧急提交问题到eservice时，才可启用紧急帐号）
+Account : HCT_SHEYUANLIN141121
+Password :
+
+4、File exchange: https://fex.sz.mediatek.com/
+username : hct.sh-03
+Password : HC280915hc
+
+重要事项：mtk的任何密码问题，除了我本人以外，其他任何人都不要去重置或修改密码，要不然再次找回密码的话真的很花时间（我今天搞了一天才把密码问题搞定！！）
+注意事项：登入以上网站的密码，各位主管（做好保密工作）务必要在各自部门宣贯 密码的保密性，谢谢大家！
+
+
+
+//192.168.1.48/源码文档/文档/HCT/软件SOP/ 新合入patch后代码获取冲突的处理办法
+
+由于patch的不稳定性, 合入patch后不能立即解决冲突.
+
+因此, 在打入patch后,如果拉取代码冲突,按照以下方式来解决.
+
+分别开启分支, 遇到冲突, 手动临时解决.
+
+操作流程如下
+1. ./distribute.sh --clean
+2. ./repo start develop --all
+     ./repo start patch  --all
+    ./repo start release  --all
+3. a. ./repo download -m `./repo list | sed 's/:.*//g' | xargs` --br release
+    b. ./repo download -m `./repo list | sed 's/:.*//g' | xargs` --br develop
+    c. ./repo download -m `./repo list | sed 's/:.*//g' | xargs` --br patch
+   上述a b c三步是进行代码合并, 如果哪步有冲突的,解决冲突后,再重新执行该步的动作
+
+4. touch release.xml
+代码获取完毕, 然后按照的指令编译版本.
+
+
+azumi分支拉代码方法
+./repo list | sed 's/:.*//' | xargs ./repo start azumi  开azumi分支
+./repo list | sed 's/:.*//' | xargs ./repo download -m  下载azumi分支
+
+
+
+拉取多个branch到指定日期
+存放路径：
+smb://192.168.1.49/源码文档/文档/智能机/Linux/scripts/android/repo/
+
+如果最新的代码库有问题，需要回溯某个（些）分支到指定日期，并且出临时版本。
+可以参考一下示例：
+
+情景一）
+    patch回溯到某一天（比如：2016-01-01-00:00）, develop. release 更新到最新。
+
+    $ ./distribute --clean
+    $ ./repo start develop --all
+    $ ./repo start release --all
+    $ ./test --br patch --time 2016-01-01-00:00
+    $ ./repo download -m --br develop $(./repo list | sed 's/:.*//g' | xargs)
+    $ ./repo download -m --br release $(./repo list | sed 's/:.*//g' | xargs)
+
+情景二）
+    release, patch回朔到某一天（比如：2016-01-01-00:00）, develop 更新到最新。
+
+    $ ./distribute --clean
+    $ ./repo start develop --all
+    $ ./test --br release patch --time 2016-01-01-00:00
+    $ ./repo download -m --br develop $(./repo list | sed 's/:.*//g' | xargs)
+
+注意：
+1）如果有回溯的需求，务必每次清理掉以前的 branch。执行 ./distribute --clean即可。
+2）./test --br release patch --time 2016-01-01-00:00 执行完毕以后，
+    会把相关的branch合并到一个新的demo分支上。
+    本来计划使用输入时间做分支名字，但是命名不符合。
+
+目前已经实现使用脚本可以拉取多个branch到指定日期的功能。
+
+具体命令如下：
+----------------------------------------
+  Help:
+
+    ./test --br <branch name> ... --time <time>
+----------------------------------------
+
+其中：
+1）test 是脚本名字。
+2）参数 --br
+后面可以指定多个branch名字，比如develop, release, patch等等可以跟多个branch。
+
+3）参数 --time
+参数格式：2016-01-01-10:00，代表 2016年1月1日 上午10:00
+
+完整的命令格式如下：
+
+./test --br develop release patch --time 2016-01-01-10:00
+
+注意：
+该功能刚刚完成，目前微demo状态。
+有需求的可以先测试用一下。
+
+
+
+
+注意, azumi项目单独建立了分支.
+
+所有驱动, MMI修改请提交到azumi分支上.
+
+./repo start azumi XXX
+
+azumi 分支已经建立：
+使用下面方法更新
+./distribute --update --br azumi patch --base azumi
+
+azumi项目的修改直接提交到azumi branch上。
+
+
+网址搜索：nydus
+vpn帐号及密码：
+zwq1457@163.com
+hct123456
+
+每天必须做的事情：
+1. 看一篇CSDN的文档
+2. 学习CTS测试文档
+3. 学习测试相关内容，每天至少两小时，六月份学完测试基础
+4. 下班之前确认第二天学习的内容，更新相关代码
+5. 本质CTS测试工作
+6. 每周做一次总结
+
+
+

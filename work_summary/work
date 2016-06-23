@@ -1,0 +1,753 @@
+
+拉代码
+在磁盘中新建一个目录，目录名为项目名
+1. //下载脚本
+curl http://192.168.1.29/repo/repo >repo
+2. //获取权限
+ chmod +x repo
+3. // 初始化repo
+./repo init -u http://192.168.1.29/repo/hct-mtk/hct6753-65t-m0-mp1-v2.39.1/manifests.git/
+4. //同步版本的master分支到本地
+./repo sync
+5. //同步所有分支到本地
+./distribute --update --all
+
+也可一次性输入：
+curl http://192.168.1.30/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.30/repo/hct-mtk/6582-wt-l-v1.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+下载具体分支并编译
+6. //下载具体分支
+./distribute --init dists/targets/t625_35gt_512g24g_53 && //注释 下载具体的分支
+7. //copy
+./distribute -p dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd
+8. //编译
+./distribute --mtkt new
+9. //只是为了将out里面的东西打包，最后生成我们要的文件
+ ./distribute -b
+
+也可一次性输入：编译eng版本
+sleep 5h ./distribute --init dists/targets/t637_63pu_64g8gDiscrete && ./distribute -p dists/targets/t637_63pu_64g8gDiscrete/hct_t637a_dh_g438a_bom3_prot && ./distribute --mtkt new && ./distribute -b
+
+./distribute --init 进行了两步操作  完成之后会生成一个文件local_mainfest.xml 文件然后执行 ./distribute --add 
+./distribute --add dists/targets/t89_35mgu_128g16g  
+
+单模块编译：只使用于更改apk文件，
+1.  ./distribute --mtkt mmm 文件路径    比如： ./distribute --mtkt mmm packages/apps/Music
+2. adb remout      // 重新挂载,使得system等具有读写权限
+3. adb push 当前对象 目标路径 比如： adb push out/target/product/hct6735m_35gu_l1/system/app/Music/Music.apk  system/app/Music  
+
+ adb pull /storage/sdcard0/mtklog/ /home/qiaojiali/   将手机上文件导入到电脑
+ adb push /home/qiaojiali/readme_9.txt /storage/sdcard0/DCIM/Camera/  把电脑上的文件导入到手机 
+
+修改代码相关操作（所有的都在develop分支下执行）
+1.  修改完代码之后   
+3.  在自己分支路径下 查看修改的状态：    git  status  （在分支上查看状态）
+4.  在自己分支路径下 添加修改的内容：  git add 文件名（此处需要注意分支要在develop分支下）
+5.  在自己分支路径下 提交代码：   git commit -m "develop:本次需要提交的注释"  比如： git commit -m "develop:update theme"  
+6.  ./repo download -m --br develop dists/targets/t637_33pgu_64g8gDiscrete 更新一下该库的代码，否则提交的时候，由于本地代码与git库代码更新不同时会error   
+7.  提交到服务器git库   ./repo upload --br develop dists/targets/t89_35mgu_128g16g/   所有的操作都在分支执行 ./repo 脚本upload上传    --br develop 把代码提交在哪个分支
+
+服务器编译发布版本步骤：
+1.   ./distribute --clean   如果服务器之前的代码编译过要先执行
+2.   ./distribute --update --br develop 
+3.   ./distribute -p dists/targets/t89_35mgu_128g16g/t89b-otd-s557-cronic-hd-33gu-128g16g --auto && ./distribute -b 
+4.   ./distribute -b 
+5.   source build/envsetup.sh 列表  
+6    lunch full_hct6735m_35gu_l-user    （cat dists.log（查看lunch具体））   
+7    make otapackage && ./distribute -b    ota包
+
+分支命名规范：   t89b   -    otd   -   s557    -    my    -     hd   -       33gu  -     128g16g   
+                 |
+           豪成项目编号    客户    客户项目编号   手机分辨率    射频制式      flash类型        flash值  
+  
+projectconfig位置
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1
+
+将桌面系统改为原生系统
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1  修改目录下的projectconfig文件里面所有的hct打头的文件
+
+开机logo更改
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/bootable/bootloader/lk/dev/logo/ct_lte_hd720
+
+一、开机动画：
+1) 制作bootanimation.zip。制作方法举例如下： 
+   分别创建名为“part0”和“part1”的文件夹以及一个名为“desc.txt”文件。“part0”中存储动画的第一阶段的资源图片，“part1”存储第二阶段的资源图片，注意图片为png格式。 
+ 
+  播放控制由“desc.txt”指定，内容如下：
+    320 480 30
+    p 1 0 part0
+    p 0 0 part1
+ 
+  各参数功能如下： ( 注意：desc.txt文本内容必须用单个空格隔开，且不能有多余空行。)
+ 
+320
+480
+30
+ 
+宽
+高
+每秒播放帧数
+ 
+p
+1
+0
+part0
+标志符
+循环次数
+阶段切换间隔时间
+对应目录名
+p
+0
+0
+part1
+标志符
+循环次数
+阶段切换间隔时间
+对应目录名
+ 
+  最后，将这三个组件通过存储压缩的方式压缩为bootanimation.zip文件即制作完成。 
+ 
+2) 预置开机动画。预置的过程如下： 
+   将制作完成的bootanimation.zip文件放在工程的资源目录下，如frameworks\base\data\sounds目录下，修改Android.mk文件，通过以下语句将该压缩包打到system\medial\路径下： $(LOCAL_PATH)/bootanimation.zip:system/media/bootanimation.zip 
+   然后再次build工程即可。
+
+压缩开关机动画终端执行：zip -0 aliyun_shutanimation.zip -r part0 part1 desc.txt
+
+开关机动画
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd/vendor/haocheng/proprietary/data/boot-shut
+
+开关机动画开关
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk  文件中更改以下变量
+HCT_BOOTANIM = yes  //开机动画
+HCT_BOOTAUDIO = yes  //开机铃声
+HCT_SHUTANIM = yes  //关机动画
+HCT_SHUTAUDIO = yes  //关机铃声  的值
+
+更改默认的铃声
+更改/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk文件中的以下变变量：
+HCT_NOTIFICATION_SOUND = bamboo.ogg  //默认短信铃声
+HCT_ALARM_ALERT = Helium.ogg   // 默认闹钟铃声
+HCT_RINGTONE = Callisto.ogg   // 默认来电铃声  的值
+
+更改默认时区
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+文件中HCT_PRODUCT_TIMEZONE = Europe/London 的值   
+
+短信铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/notifications
+
+闹钟铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/alarms
+
+来电铃声
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/data/sounds/ringtones
+
+修改商标（brand）
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk 
+修改文件中HCT_PRODUCT_BRAND = DOOGEE值
+
+修改手机型号
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk 
+ 修改文件中HCT_PRODUCT_MODEL = T6值
+
+修改制造商MANUFACTURER
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+ 修改文件中HCT_PRODUCT_MANUFACTURER = DOOGEE值
+
+修改默认蓝牙名词
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/custom.conf
+修改文件中bluetooth.HostName = T6值
+
+默认wifi名字修改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/custom.conf  文件中修改
+修改文件中 wlan.SSID = T6值
+
+支持手电筒
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/projectconfig.mk
+ 修改文件中HCT_TORCH_SUPPORT = yes的值
+
+默认语言，及支持语言
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1/full_hct6735m_35gu_l1.mk
+修改文件中
+ PRODUCT_LOCALES := en_US zh_CN zh_TW es_ES pt_BR ru_RU fr_FR de_DE tr_TR vi_VN ms_MY in_ID th_TH it_IT ar_EG hi_IN bn_IN ur_PK fa_IR pt_PT nl_NL el_GR hu_HU tl_PH ro_RO cs_CZ ko_KR km_KH iw_IL my_MM pl_PL es_US bg_BG hr_HR lv_LV lt_LT sk_SK uk_UA de_AT da_DK fi_FI nb_NO sv_SE en_GB hy_AM zh_HK et_EE ja_JP kk_KZ sr_RS sl_SI ca_ES af_ZA  sw_TZ rm_CH zu_ZA  的值   第一个为默认语言
+
+添加壁纸
+测试尚未成功/code/hct6753-65C-l1-mp3-v2.0/packages/apps/Launcher3/WallpaperPicker/res/values-nodpi 目录下wallpapers.xml里面item的值
+
+修改默认的壁纸
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/core/res/res/drawable-nodpi   目录下jpg图片就可以了
+
+添加墙纸
+1. /code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/overlays/localization/zh-rCN/packages/apps/Launcher3/WallpaperPicker/res/drawable-nodpi 目录下添加壁纸 
+
+2./code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/overlays/localization/zh-rCN/packages/apps/Launcher3/WallpaperPicker/res/values-nodpi  目录下wallpapers.xml里面item的值
+
+修改版本号： 
+需要注意： 
+/code/hct6735m-65C-l1-mp3-v1.0/dists/targets/t89_35mgu_128g16g/t89b-otd-s557-my-hd-33gu-128g16g/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/HctSetting/res/values/hct_strings.xml 中的<string name="hct_default_build_name">MYLEAGOO_OS_5.1_Elite 5_R14_0316</string>的值
+/code/hct6735m-65C-l1-mp3-v1.0/dists/targes/t89_35mgu_128g16g/t89b-otd-s557-my-hd-33gu-128g16g/device/haocheng/hct6735m_35gu_l/prjectconfig.mk中
+MTK_BUILD_VERNO = MYLEAGOO_OS_5.1_Elite5_R14_0316
+CUSTOM_BUILD_VERNO = R14的值
+
+工厂测试项目：
+//hall 的更改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd-demo/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/FactoryMode/res/values/config.xml  修改文件中的<bool name="config_hall_available">true</bool>    false改为true
+// OTG 的更改
+/code/t6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a43-33fpgu-hd-128g16g-fdd/vendor/haocheng/proprietary/overlays/localization/zh-rCN/vendor/haocheng/proprietary/packages/FactoryMode/res/values/config.xml
+修改文件中的 <bool name="config_otg_available">true</bool>  false改为true
+
+地磁
+<bool name="config_Msensor_available">false</bool>
+
+红外线
+<bool name="config_support_infrared_sensor">true</bool>
+
+RGB灯
+<bool name="config_threecolorlights_enable">true</bool>
+
+指纹识别
+HCT_SUPPORT_FINGERPRINT_MADEV=yes   
+
+
+预置APK
+一 .  可卸载   
+以安装Fps2D_3.1.0-LCM apk为例
+1.  找到/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/3rd-party/apk_and_code/dg_t925/data  在此目录下新建一个文件夹与预装的apk名字相同
+2.  把apk文件复制到该文件夹下
+3.  在文件夹下新建Android.mk文件，文件的内容如下：
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+# Module name should match apk name to be installed
+LOCAL_MODULE := Fps2D_3.1.0-LCM
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+ifeq ($(strip $(TARGET_ARCH)), arm64)
+LOCAL_MULTILIB :=32 
+endif 
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_MODULE_PATH := $(TARGET_OUT)/vendor/operator/app
+include $(BUILD_PREBUILT)
+
+4. 修改/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/build  中的target_product.mk文件，在文件中添加如下内容：
+ifeq (yes,$(strip $(HCT_T875_APK)))
+    PRODUCT_PACKAGES += Fps2D_3.1.0-LCM
+endif
+
+5.  修改/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-demo/device/haocheng/hct6735m_35gu_l1 中projectconfig.mk 文件，在文件中添加如下内容：
+HCT_SOGOU_APK = yes  //开关
+
+二 . 不可卸载 
+不可卸载 与可卸载 不同点：
+ 1. 第一步新建文件夹的目录不同：/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/3rd-party/apk_and_code/dg_t925/system
+ 2. 第三步中Android.mk文件的内容不同内容如下：
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := ShowInstallPackage
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_TAGS := optional
+LOCAL_BUILT_MODULE_STEM := ShowInstallPackage.apk
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_PRIVILEGED_MODULE := true
+LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+#LOCAL_REQUIRED_MODULES := libFPdevice InLineTool
+include $(BUILD_PREBUILT)
+
+
+linux命令
+打开文件： xdg-open 文件路径   如： xdg-open ./base/core/java/com/android/internal/os/RuntimeInit.java
+
+rm -rf 目录名字/文件名字  彻底删除文件或目录
+
+搜索： grep "要查找的字符串" -r ./     grep "persist.sys.timezone" -r ./   备注： -r 递归     ./当前路径下
+grep -r 查找的字符串 .      
+gedit ./AndroidManifest.xml  打开AndroidManifest.xml文件 
+
+
+history  查看历史命令
+ls  目录下的文件列表
+ll  列出目录下的文件详情
+
+git 常用命令
+git add .
+git commit -m "****" //提交到本地
+git  status  //查看状态 分支代码是否修改过
+git diff file   //比较当前文件和暂存区文件差异
+git log  //查看修改记录
+git br -d <branch> //删除某个分支
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/packages/SystemUI/res/values/config.xml  通知栏
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/packages/SystemUI/res/values/hct_config.xml  是否深度清理所有任务
+
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/core/res/res/values/hct_config.xml 智能唤醒相关开关
+-------------------------------start-----------------------------------------
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string name="hct_config_launcher_theme" translatable="false">cn.sh.hct.themeNormal</string>
+
+  <bool name="hct_tp_gesture_enable">true</bool>
+
+  <string-array translatable="false" name="config_tpgesture_cchar_entry">
+    <item>"com.android.gallery3d"</item>
+    <item>"com.android.camera.CameraLauncher"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_ochar_entry">
+    <item>"com.android.contacts"</item>
+    <item>"com.android.dialer.DialtactsActivity"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_ochar_entry">
+    <item>"com.android.gallery3d"</item>
+    <item>"com.android.gallery3d.app.GalleryActivity"</item>
+  </string-array>
+  <string-array translatable="false" name="config_tpgesture_wchar_entry">
+    <item>"com.android.contacts"</item>
+    <item>"com.android.contacts.activities.PeopleActivity"</item>
+  </string-array>
+
+  <bool name="hct_tp_gesture_enable">true</bool>
+  <bool name="hct_tp_gesture_zchar_enable">true</bool>
+  <bool name="hct_tp_gesture_mchar_animation_enable">true</bool>
+  <bool name="hct_tp_gesture_vchar_enable">true</bool>
+  <bool name="config_change_rom_size">true</bool>
+  <bool name="config_modify_device_info">true</bool>
+<bool name="config_show_ip_call">false</bool>
+</resources>
+
+--------------------------------end----------------------------------------
+/code/hct6753-65C-l1-mp3-v2.0/dists/targets/t875_33fpgu_128g16g/t875c-daoge-a33-33fpgu-hd-128g16g-fdd-test1/vendor/haocheng/proprietary/overlays/localization/zh-rCN/frameworks/base/core/res/res/values/config.xml   
+<bool name="config_hct_volumekey_sound_modify">true</bool> /声音/音量////////////////修//改
+    <bool name="def_vibration_enabled">false</bool>   ///振动启动
+    <bool name="def_haptic_feedback">true</bool>     //触摸回应
+    <bool name="def_dtmf_tone_when_dialing">false</bool>
+    <bool name="def_sound_effects_enabled">false</bool>
+    <integer name="def_lockscreen_sounds_enabled">1</integer>
+
+进入服务器：  ssh release@192.168.1.61 
+服务器用户名： release
+服务器密码： release
+
+软件平台owener
+smb://192.168.1.48/源码文档/文档/HCT/平台相关  下的 软件平台owener
+
+mtk在线支持
+https://sso.mediatek.com/eai/Login.aspx
+
+用户名: zhouhongxuan@hct.sh.cn
+密码: CHENG2007hct
+
+有些mtk 文档需要密码
+密码为:
+0386743513
+
+以上都是android项目
+
+android外单开机logo修改不成功
+需要删除
+hct6753-65C-l1-mp3-v2.0/out/target/product/hct6735_35gu_l1/obj 文件下面的四个文件  重新编译
+
+
+android默认日期的修改
+1. android L （5.1）
+bootable/bootloader/preloader/custom/项目名/inc/cust_rtc.h
+#define RTC_DEFAULT_YEA		2016
+#define RTC_DEFAULT_MTH		1
+#define RTC_DEFAULT_DOM		1
+
+
+修改默认的年份
+/code/6753c-v2.0/hct6753-65C-l1-mp3-v2.0_01/vendor/mediatek/proprietary/frameworks/base/res/res/values/config.xml
+<integer name="default_restore_year">2015</integer>  
+
+android编译：
+source bulid/envsetup.sh 设置android的编译环境
+lunch full_ali6735m...-eng 选择编译的目标
+make Camare 单独编译模块会将相关依赖编译进来 
+mmm Camare 单独编译相机模块（只编译这个模块）单模块编译必须是在已经make之后的环境下才可编译
+抓取log
+adb logcat | grep aaaa
+
+T卡升级包复制到SD里面，插入手机。
+1.手机关机后，按power键+音量上键，启动Recover模式  
+2.进入Recover模式选择apply update from sdcard-选择放在手机内存或SD卡内存里面OTA包，确定就可以了
+(18时06分28秒) 刘月:
+3.等待T卡升级提示成功后，选择reboot system now 重启手机
+
+============================================ali项目===============================================================
+
+阿里如何制作default 主题包
+1.   从UED那里得到一个一般的主题包 例如 alixxx.zip
+2.   复制主题包到TDT工具同一目录， 双击运行TDT.jar
+3.   文件à打开主题à选取zip包， 再关闭TDT ， 会在同一目录下生成alixxx 目录。 
+4.   修改该目录下两个文件: 
+a.   Icons/AndroidManifest.xml 中 <manifest package="iconstheme" 改为  <manifest package="iconOrigin"
+b.   icons\res\values\dimens.xml 中添加两行：
+<dimen name="max_icon_size">60.0dip</dimen>
+<dimen name="max_shadow_size">64.0dip</dimen>
+5.   打开TDT， 打开工程, 选择 alixxx 目录, 然后 文件à打包 , 会在alixxx目录中生成“主题.zip” 
+6.   把“主题.zip”解压，就是default主题。
+
+overlays 目录下config文件  首先查看主干相关属性值
+<bool name="config_gyroscopesensor_available">true</bool>   //陀螺义
+
+<bool name="config_Msensor_available">false</bool>	//地磁
+
+
+
+拉代码 ：（与android相同，非烧录相同）
+curl http://192.168.1.29/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.29/repo/hct-mtk/6753_c2k_alios3.2.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t525_33pgc_64g8g
+
+  非烧录eng版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 eng adb new true && ./imgout
+非烧录  user版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 user adb new true && ./imgout
+
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./mk_aliphone_sign.sh ali6735m_35gc_a_l1 user adb new true otapackage && ./imgout
+
+版本编好了用这个命令打包一下，tar zcvf t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21-R07-0504.tar.gz release-ali6735m_35gc_a_l1/ 编译好之后再发布
+
+名称不能出现空格，否则会报错
+HCT_PRODUCT_MODEL = Haier_Y105-TL
+HCT_PRODUCT_BRAND = Haier_Y105-TL
+
+工厂测试模式手机串号功能 需要修改主干内容：
+
+vendor/haocheng/proprietary/packages/下的
+FactoryMode/AndroidManifest.xml 		diff | blob | history
+FactoryMode/res/values/strings.xml 		diff | blob | history
+FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
+这三个地方
+
+
+AndroidManifest.xml 
+ -                <data android:scheme="android_secret_code" android:host="8688" />
++                <data android:scheme="android_secret_code" android:host="@string/hct_change_imei_secret_code" />
+
+
+strings.xml 
++    <string name="hct_change_imei_secret_code" translatable="false">8688</string>
+
+TestBroadcastReceiver.java
+--- a/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
++++ b/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
+@@ -30,6 +30,7 @@ public class TestBroadcastReceiver extends BroadcastReceiver {
+         String factoy = context.getResources().getString(R.string.factorymode_code);
+         String factoy_custom = context.getResources().getString(R.string.factorymode_code_custom);
+         String aging_test = context.getResources().getString(R.string.aging_test_code);
++        String imei_code = context.getResources().getString(R.string.hct_change_imei_secret_code);
+        // process *#*#3646633#*#*
+                Uri engineerUri = Uri.parse("android_secret_code://"+engineer);
+        // process *#*#66#*#*
+@@ -41,7 +42,7 @@ public class TestBroadcastReceiver extends BroadcastReceiver {
+        // process *#*#8615#*#*
+                Uri querySystemInfoUri = Uri.parse("android_secret_code://8615");
+                // process *#*#8688#*#*
+-               Uri queryGPRSInfoUri = Uri.parse("android_secret_code://8688");
++               Uri queryGPRSInfoUri = Uri.parse("android_secret_code://" + imei_code);
+                /* add by shaolianjie s  20141111 */
+                String aux_engineer = context.getResources().getString(R.string.aux_engineer_code);
+                String aux_factory = context.getResources().getString(R.string.aux_factory_code);
+
+
+把string.xml 文件复制到分支同等目录下 <string name="hct_change_imei_secret_code" translatable="false">8688</string>  把值更改为需求值
+
+下拉新的 分支
+./distribute --add  dists/targets/branch name
+
+修改默认字体大小
+device/alibaba/项目名/ProjectConfig.mk文件
+HCT_DEFAULT_FONT_SIZE = 3
+
+更改  设置-存储-详细信息- 下的其他改为 系统空间及其他 需要修改的语言英语，繁体
+/code/ali/6753_c2k_alios3.2.0_01/packages/apps/Settings/res/values-zh-rCN/strings.xml  文件中的
+  
+需要在分支的 /code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/packages/apps/Settings/res/values-zh-rCN 将主干的strings.xml 复制过来 
+<string name="memory_media_misc_usage" msgid="235452944021647124">"其他"</string>更改成需求的值 
+
+
+details.availSize  
+ - dcimSize 图片及视频
+- musicSize    音乐
+ - downloadsSize   下载内容
+- details.cacheSize  缓存数据
+ - details.miscSize 其他存储空间变量 
+
+拨号盘输入*#1030#只显示内部版本号，格式为： Haier Y105-TL-H01A-S03-CHN-编译时间  分支下更改以下内容
+
+1.  vendor/haocheng/proprietary/packages/FactoryMode/AndroidManifest.xml 增加
+    <data android:scheme="android_secret_code" android:host="@string/hct_query_internal_version_code" />
+2. vendor/haocheng/proprietary/packages/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java  增加两段代码
+  a.  Uri queryInternalversionUri = Uri.parse("android_secret_code://"+context.getResources().getString(R.string.hct_query_internal version_code));
+
+  b.  添加一个判断语句：
+    } else if (uri.equals(queryInternalversionUri)){
+                    Log.d("TestBroadcastReceiver", "TestBroadcastReceiver test queryInternalversionUri");
+                    Intent i = new Intent(Intent.ACTION_MAIN);
+					i.setComponent(new ComponentName(
+							"com.mediatek.factorymode",
+							"com.mediatek.factorymode.versioninfo.VernoInfo"));
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(i);
+3.   vendor/haocheng/proprietary/packages/FactoryMode/res/values/strings.xml 增加
+     <string name="hct_query_internal_version_code" translatable="false">1030</string>
+4. vendor/haocheng/proprietary/packages/FactoryMode/res/layout/vernoinfo.xml 删除布局中的外部版本号的相关代码
+5.  /vendor/haocheng/proprietary/packages/FactoryMode/src/com/mediatek/factorymode/versioninfo/VernoInfo.java  删除外部版本号相关代码
+
+CUSTOM_BUILD_VERNO = R02  内部版本号
+MTK_BUILD_VERNO = H01-S03-CHN-20160323  外部版本号
+
+虚拟home键 system.prop 文件  qemu.hw.mainkeys=1 
+
+模块编译   快速验证（前提是已经此环境编译过）
+source build/envsetup.sh
+cat dists.log 
+lunch full_ali6735m_35gc_a_l1-eng
+mmm packages/apps/Settings/  
+以上操作步骤完成后会在out目录下生成一个Settings.apk 文件，然后把此apkpush到手机看效果
+
+
+阿里的系统资源
+阿里的系统资源基本都放在device/alibaba/common/resources/里面
+
+（1）默认铃声
+device/alibaba/common/resources/default.mk里面
+#Config special sounds
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.config.notification_sound=02_Notification.ogg  \
+    ro.config.alarm_alert=01_10MinsLife.ogg \
+    ro.config.ringtone=ringer.mp3 \
+    ro.config.message_alert=01_Message.ogg
+这里如果需要更换，可以修改写成对应的文件名称即可，如果要新添加，可以按照我们安卓上面的方式添加。
+
+（2）开关机动画、开关机铃声
+阿里默认开机动画：device/alibaba/common/resources/aliyun_bootanimation.zip
+阿里默认开关机铃声：device/alibaba/common/resources/sounds/audio/On.ogg  Off.ogg
+阿里没有关机动画，如果要客制化关机动画，需要改三个地方：
+a，system.prop里面加入ro.operator.optr=CUST；
+b，device/alibaba/common/resources/BootAnimation.mk里面添加拷贝脚本
+PRODUCT_COPY_FILES += \
+   $(LOCAL_PATH)/shutanimation.zip:system/media/shutanimation.zip
+c，对应路径下添加关机资源包
+
+（3）型号、品牌、厂商名称
+a，device/alibaba/ali6735m_35gc_l/custom.conf
+b，build/tools/buildinfo.sh里面
+echo "ro.product.model=乐6S"
+echo "ro.product.brand=AoleDior"
+echo "ro.product.manufacturer=AoleDior"
+
+/device/haocheng/hct6580_weg_a_l/system.prop中修改qemu.hw.mainkeys=0值为０时在屏幕上有选项，home，回退按键，当手机设备自带有这些时，把值设置为１，
+则不会在屏幕上显示这些按键。ro.sf.lcd_density=240屏幕分辨率调整，240为qhd的屏幕，当屏幕分辨率为hd时，改为320.
+当然，也需要在自己项目的/device/haocheng/hct6580_weg_a_l/system.prop中去修改这些配置，编译时回覆盖到主分支上
+
+来电短信铃声
+./device/alibaba/common/resources/sounds/YunosAudio.mk:        $(LOCAL_PATH)/incomingcall/01_Clouds.ogg:system/media/audio/ringtones/01_Clouds.ogg \
+./device/alibaba/common/resources/default.mk:    ro.config.ringtone=01_Clouds.ogg \
+
+./frameworks/base/core/res/res/xml/ali_internal_audio_display_name.xml:  <name title="01_Clouds" resid="01_Clouds" />
+./frameworks/base/core/res/res/values-zh-rCN/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">云霄</string>
+./frameworks/base/core/res/res/values/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">Clouds</string>
+./frameworks/base/core/res/res/values-zh-rTW/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">雲霄</string>
+多核观察器
+MTK_MULTICORE_OBSERVER_APP 
+
+add： /code1/6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525g-ouqi-s03-hd-33fpgc-128g16g-alios-volte-bom10/device/alibaba/common/resources/theme
+
+默认锁屏壁纸--lockwallpaper（无后缀名）
+/device/alibaba/common/resources/theme/default/lockwallpaper
+
+默认桌面壁纸--wallpapers（无后缀名）
+/device/alibaba/common/resources/theme/default/wallpapers
+
+当前使用主题预览
+/device/alibaba/common/resources/theme/default/previews/
+
+更改主题包（主题包有专用工具处理）
+/device/alibaba/common/resources/theme/default/icons
+
+预制桌面及锁屏壁纸
+/device/alibaba/common/resources/theme/inner_wallpaper/
+
+参考主题的icon
+/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/packages/HctThemes/theme-res-Golden
+
+长按home键打开手电筒  
+aliyunos/packages/apps/AliLockScreen/v21/com/android/keyguard/AliKeyguardHostView.java
+//此判断语句是长按home键实现打开手电筒的功能
+f(false) { //(TorchHelper.TORCH_ENABLE) {
+            if (keyCode == KeyEvent.KEYCODE_HOME && mScreenOn) {
+
+
+工厂测试模式更改
+device/alibaba/common/resources/custom/engineer.xml
+
+修改默认锁屏天气预报是关闭状态
+frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+<integer name="def_lockscreen_weather_anim">0</integer>  0是默认关闭  1是默认打开
+
+相机默认尺寸4： 3  或16：9
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values
+
+相机闪光灯默认电量低于15% 提示电量过低关闭闪光灯
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values/config.xml
+<bool name="config_disable_flash_when_lowpower">true</bool>
+
+
+主界面 时间插件 请更换成 天气时钟 4X1
+/code1/6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525g-ouqi-s03-hd-33fpgc-128g16g-alios-volte-bom10/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/HomeShell/res/values/config.xml
+ <!--add sunyuepeng 20160305-->
+
+    <string name="clock_apollo_4x1" translatable="false">"clock2_4x1"</string> 
+相机前置摄像头默认打开 
+/code/ali/6753_c2k_alios3.2.0_testBom17/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values
+
+修改launcher字体大小
+vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/HomeShell/res/values/dimens.xml
+ <dimen name="workspace_icon_text_size">11sp</dimen>
+    <dimen name="workspace_icon_text_size_small">8sp</dimen>
+
+
+ 修改阿里相机布局
+/code/ali/6753_c2k_alios3.2.0_testBom21/aliyunos/packages/apps/AliCamera/res/layout/camera_controls.xml
+
+/code/ali/6753_c2k_alios3.2.0_testBom21/aliyunos/packages/apps/AliCamera/src/com/yunos/camera/ui/CameraControls.java
+
+
+
+//			Dialog dialog = new BootCluesDialog(context);
+//			dialog.show();
+			AlertDialog.Builder builder = new Builder(context);
+			builder.setMessage(context.getResources().getString(R.string.imei_number_clues));
+			builder.setTitle("提示");
+			builder.setPositiveButton("知道了", new OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+					dialog.dismiss();
+				}
+			});
+			
+builder.setNegativeButton("取消", new OnClickListener() {
+	
+	@Override
+	public void onClick(DialogInterface dialog, int which) {
+		// TODO Auto-generated method stub
+		dialog.dismiss();
+	}
+});
+			 builder.create().show();
+
+
+
+阿里修改桌面将文件收到文件夹中
+aliyunos/packages/apps/HomeShell/res/xml/default_workspace.xml
+<folder
+        launcher:screen="1"
+        launcher:x="3"
+        launcher:y="1"
+        launcher:title="@string/title_folder_tools" >
+        
+        <favorite
+            launcher:packageName="com.yunos.compass"   //对应apk的包名
+            launcher:className="com.yunos.compass.CompassActivity"  //对应的apk的类名
+            launcher:screen="0"    
+            launcher:x="2"
+            launcher:y="0"
+            launcher:container="1" />
+
+    </folder>
+
+把需要放入文件夹中的apk包名类名 写在对应的位置
+
+合入音频文件
+vendor/mediatek/proprietary/custom/common/cgen/cfgdefault/
+
+主干上：/vendor/mediatek/proprietary/custom/common/cgen/cfgdefault/audio_ver1_volume_custom_default.h文件是对*#*#8612#*#*下的参数修改，
+例如：
+#define VER1_AUD_VOLUME_SPH \　　　这个是对speech的修改
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\　　对正常模式(Normal Mode)的修改　　数字分别对应level0,level1, ....后面的０表示没有这个level
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\    对耳机模式(Headset mode)的修改
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\    对免提模式(Louderspeaker mode)的修改
+    40,52,64,76,88,100,112,0,0,0,0,0,0,0,0　　　　对Headset_LoudSpeaker Mode的修改
+
+对audio---Speech Enhancement----- Headset Mode  Parameter 11  4613　的修改是在相同目录下的sph_coeff_default.h里面，对照手机找到相应的位置就可以了。
+合入频响也是把频响的库文件放到这个目录下
+以上所有的修改都要在自己目录下进行，在自己分支建立相应的路径，放置修改和加入的文件（注意不是放在overlay里面）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+

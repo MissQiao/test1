@@ -1,0 +1,186 @@
+5.1.0 CTA 修改流程
+建立项目分支的时候请一定重新定义yunos model，而且避免跟之前的分支重复，否则fota升级可能会错乱 
+修改路径：aliyunos/build/tools/buildinfo.sh-----ro.yunos.model
+需要尽量简短但是详细的描述清楚项目信息
+例：echo "ro.yunos.model=HCT_LG_T625_VOLTE"
+1.新建分支可直接复制同平台的其他cta项目分支，
+2.修改一下branch name
+3.用beyond compare 工具与同分支的其他cta项目对比
+4. 需要修改内容如下几点：
+1.aliyunos/packages/apps/AliSettings/ali_res/xml/ali_display_settings.xml
+        <Preference
+            android:key="ali_lock_screen_switch"
+            android:title="@string/ali_lock_screen_settings_switch_title"
+            android:summary="@string/ali_lock_screen_settings_switch_summary" >
+            <intent
+                android:action="com.yunos.intent.magazine.setting"
+                android:targetPackage="com.yunos.magazine" />
+        </Preference>
+可注释掉   ？
+
+2.aliyunos/packages/apps/AliSettings/src/com/android/settings/aliyun/AliAboutPhoneMore.java
+如果版本号中有空格直接在        
+//mBuild.setSummary(getbuildVersion());中修改 例如:
+mBuild.setSummary("NOAIN X15_V1.0");
+
+3.build/tools/buildinfo.sh
+主要修改
+echo "ro.build.display.id=$BUILD_DISPLAY_ID"
+echo "ro.product.model=$PRODUCT_MODEL"
+echo "ro.product.brand=$PRODUCT_BRAND"
+
+4.development/apps/Development/Android.mk   ？
+此文件需要置空
+
+5.device/alibaba/ali6737m_35g_m0/ProjectConfig.mk
+需要打开的宏可对比同平台分支,在宏前面加入#号的都是CTA需要注意的.
+例如:
+#
+MTK_CTA_SUPPORT = yes
+#
+MTK_MOBILE_MANAGEMENT = no
+BOOT_LOGO 的值需要与vendor/mediatek/proprietary/bootable/bootloader/lk/project/ali6737m_35g_m0.mk中BOOT_LOGO值像对应
+LCM_HEIGHT = 854  //屏幕的高度也需要注意 （对应屏幕的分辨率）
+LCM_WIDTH = 480   //屏幕的宽度也需要注意
+MTK_BUILD_VERNO = XDH_007    外部版本号需要更改
+CUSTOM_BUILD_VERNO = G13_V1.0  内部版本号需要更改
+
+6.device/alibaba/ali6737m_35g_m0/system.prop
+需注意虚拟按键和屏幕密度设置
+
+7.device/alibaba/common/device.mk   ？
+YUNOS_SUPPORT_CTA ?= yes  注意这个文件每次要和主干同步
+
+8.device/mediatek/common/custom.conf  
+型号等修改
+
+9.vendor/mediatek/proprietary/packages/apps/EngineerMode/src/com/mediatek/engineermode/wifi/WiFiRx6620.java  ？
+vendor/mediatek/proprietary/packages/apps/EngineerMode/src/com/mediatek/engineermode/wifi/WiFiTx6620.java   ?
+可参考同平台CTA修改
+
+10. vendor/mediatek/proprietary/bootable/bootloader/lk/project/ali6737m_35g_m0.mk
+BOOT_LOGO开机logo的值，此值对应的是开机logo的文件夹屏幕分辨率hd的对应的值是hd720即BOOT_LOGO:=hd720
+
+11. kernel-3.18/arch/arm/configs/ali6737m_35g_m0_defconfig
+    kernel-3.18/arch/arm/configs/ali6737m_35g_m0_debug_defconfig
+CONFIG_LCM_HEIGHT="854"  //屏幕的高度
+CONFIG_LCM_WIDTH="480"   //屏幕的宽度
+#CONFIG_HCT_FINGERPRINT_SUPPORT=y  如果不支持指纹就注释掉
+#CONFIG_FINGERPRINT_AFS120N=y    如果不支持指纹就注释掉
+
+12. 以上修改完成之后发邮件给驱动，驱动提交对应的驱动代码
+
+13. 待驱动回复邮件提交完成后再检查一遍代码提交是否有错，编译正式版本之前发邮件给驱动确认是否提交完成
+
+14. 待驱动回复邮件之后开始编译，编译完成之后需要download到手机上验证一下
+编译指令：
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/target/t635_35g_64g8gDiscreteSD_37/t635d-oq-g13-33gc-hd-64g8g-alios-37-vilte-cta-SD && ./dists/scripts/mk_aliphone.sh ali6737m_35g_m0 eng adb new false YUNOS_SUPPORT_CTA=yes APR_MODE=off && ./imgout
+
+15. 验证完成后发布软件
+
+3.2.0 CTA 修改流程
+1.需要添加apk
+aliyunos/yunospick/prebuilts/app/AliWalkman.apk
+可参考同平台
+
+2.aliyunos/yunospick/prebuilts/app/Android.mk
+需要添加
+LOCAL_MODULE := AliXiaoYun
+LOCAL_SRC_FILES := ./AliXiaoYun.apk
+LOCAL_MODULE_CLASS := APPS
+LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
+LOCAL_CERTIFICATE := PRESIGNED
+include $(BUILD_PREBUILT)
+include $(CLEAR_VARS)
+LOCAL_MODULE_TAGS := optional
+
+3.aliyunos/yunospick/tools/config.txt
+需要添加system/app/AliXiaoYun/AliXiaoYun.apk
+
+4.build/tools/buildinfo.sh
+主要修改
+echo "ro.build.display.id=$BUILD_DISPLAY_ID"
+echo "ro.product.model=$PRODUCT_MODEL"
+echo "ro.product.brand=$PRODUCT_BRAND"
+
+5.development/apps/Development/Android.mk
+此文件需要置空
+
+6.device/alibaba/ali6735_35g_m0/ProjectConfig.mk
+需要打开的宏可对比同平台分支,在宏前面加入#号的都是CTA需要注意的.
+例如:
+#
+MTK_CTA_SUPPORT = yes
+#
+MTK_MOBILE_MANAGEMENT = no
+
+6.device/alibaba/ali6737m_35g_m0/system.prop
+需注意虚拟按键和屏幕密度设置
+
+8.device/alibaba/common/device.mk
+YUNOS_SUPPORT_CTA ?= yes  注意这个文件每次要和主干同步
+
+9.device/alibaba/ali6735_35g_m0/custom.conf  
+型号等修改
+
+10.device/mediatek/common/overlay/sd_ex_otg/frameworks/base/core/res/res/xml/storage_list.xml
+device/mediatek/common/overlay/sd_in_ex_otg/frameworks/base/core/res/res/xml/storage_list.xml
+如果不支持OTG需要修改此文件
+
+11.packages/apps/Settings/ali_res/xml/settings_headers.xml
+去掉HCT的存储页面
+    <!--HCT: modify for memory info (start)-->
+ 
+    <header
+        android:id="@+id/storage_settings"
+        android:fragment="com.android.settings.deviceinfo.Memory"
+        android:icon="@drawable/ic_settings_storage"
+        android:title="@string/storage_settings">
+        <extra android:name="setting_component_key" android:value="storage" />
+        <intent android:targetPackage="com.android.settings"
+                android:targetClass="com.android.settings.Settings$StorageSettingsActivity"/>
+    </header>
+      <!--
+    <header
+        android:id="@+id/storage_settings"
+        android:fragment="com.android.settings.deviceinfo.HctMemory"
+        android:icon="@drawable/ic_settings_storage"
+        android:title="@string/storage_settings">
+        <extra android:name="setting_component_key" android:value="storage" />
+        <intent android:targetPackage="com.android.settings"
+                android:targetClass="com.android.settings.Settings$HctMemoryInfo"/>
+    </header>
+ -->
+    <!--HCT: modify for memory info (end)-->
+
+12.vendor/mediatek/proprietary/binary/3rd-party/free/DangerDash/Android.mk
+vendor/mediatek/proprietary/packages/apps/WiFiTest/Android.mk
+此文件需要置空
+
+13.vendor/mediatek/proprietary/packages/apps/EngineerMode/src/com/mediatek/engineermode/wifi/WiFiRx6620.java
+vendor/mediatek/proprietary/packages/apps/EngineerMode/src/com/mediatek/engineermode/wifi/WiFiTx6620.java
+可参考同平台CTA修改
+
+
+CTA基础的非定制库
+
+1)项目分支ProjectConfig.mk需要打开:
+
+YUNOS_MANUAL_SET_PRIMARY_CARD=yes
+
+2)快速开关机:
+
+MTK_IPO_SUPPORT = yes
+
+3)修改设置-移动网络-首选网络类型(此选项置灰,显示4G/3G/2G 自动) –此问题阿里明天会加入开关
+
+4)IMEI号, 能够写入和显示两个不同的IMEI号
+
+
+CTA版本FAQ
+1. CTA版本是用来做什么的？
+2. 为什么要编译CTA版本？
+3. CTA版本的工作流程是什么样的？
+4. CTA版本新建分支注意事项
+5. 代码修改点
+

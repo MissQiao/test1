@@ -1,0 +1,20 @@
+外单需要注意事项
+开关机动画及logo 需要修改
+MTK_MULTICORE_OBSERVER_APP = no  开关关掉
+
+MTK_PERMISSION_CONTROL = no
+MTK_PERSIST_PARTITION_SUPPORT = no
+#hct mmi modify
+MTK_PHONE_NUMBER_GEODESCRIPTION = no
+
+#hct mmi modify
+MTK_SYSTEM_UPDATE_SUPPORT = no
+
+MTK_BT_BLE_FRAMEWORK_SUPPORT = no
+MTK_BT_BLE_MANAGER_SUPPORT = no
+
+去掉ip拨号
+projectconfig 文件HCT_REMOVE_IP_PREFIX_SUPPORT = yes 
+frameworks/base/core/res/res/values/hct_config.xml 下的<bool name="config_show_ip_call">false</bool> 
+
+

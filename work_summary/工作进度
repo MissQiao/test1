@@ -1,0 +1,73 @@
+一  ali  t525 鑫语 
+  平台路径： 6753_c2k_alios3.2.0/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte 
+  拉代码方法： 
+curl http://192.168.1.29/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.29/repo/hct-mtk/6753_c2k_alios3.2.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t525_33pgc_64g8g
+
+  非烧录end版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 eng adb new true && ./imgout
+非烧录  user版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 user adb new true && ./imgout
+
+版本编好了用这个命令打包一下，tar zcvf hct-t87-oq-a2-33pgc-hd-128g16g-bom13-ali-volte-tiepian-R03.tar.gz release-ali6735m_35gc_k/ 编译好之后再发布
+
+
+
+
+二    android外单  勃朗 bl66 bom130
+     平台路径：hct6753-65C-l1-mp3-v2.0/dists/targets/t823_35agu_128g16g/t823y-bl-bl66-35agu-hd-128g16g-bom130
+
+拉代码方法：
+curl http://192.168.1.30/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.30/repo/hct-mtk/hct6753-65C-l1-mp3-v2.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t823_35agu_128g16g
+
+编译eng版本：./distribute -p dists/targets/t823_35agu_128g16g/t823y-bl-bl66-35agu-hd-128g16g-bom130 && ./distribute --mtkt new && ./distribute -b 
+编译user版本： 在服务器上编译 ./distribute -p dists/targets/t823_35agu_128g16g/t823y-bl-bl66-35agu-hd-128g16g-bom130 --auto && ./distribute -b 
+编译fota升级包： source build/envsetup.sh 列表  
+     cat dists.log  查看lunch后面的 编译的芯片类型 
+    lunch full_hct6735m_35gu_l-user  
+    make otapackage && ./distribute -b   //生成ota包
+
+
+三    android外单 传奇 t823k bom64
+    
+     平台路径：hct6753-65C-l1-mp3-v2.0/dists/targets/t823_33pgu_128g16g/t823k-cq-5171-33pgu-hd-128g16g-bom64
+
+拉代码方法：
+curl http://192.168.1.30/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.30/repo/hct-mtk/hct6753-65C-l1-mp3-v2.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t823_33pgu_128g16g
+
+编译eng版本：./distribute -p dists/targets/t823_33pgu_128g16g/t823k-cq-5171-33pgu-hd-128g16g-bom64 && ./distribute --mtkt new && ./distribute -b 
+编译user版本： 在服务器上编译 ./distribute -p dists/targets/t823_33pgu_128g16g/t823k-cq-5171-33pgu-hd-128g16g-bom64 --auto && ./distribute -b 
+编译fota升级包： source build/envsetup.sh 列表  
+     cat dists.log  查看lunch后面的 编译的芯片类型 
+    lunch full_hct6735m_35gu_l-user  
+    make otapackage && ./distribute -b   //生成ota包
+
+四   android外单 传奇 t823k bom52
+
+     平台路径：hct6753-65C-l1-mp3-v2.0/dists/targets/t823_33gu_256g24g_53/t823k-cq-5171-33gu-fhd-256g24g-bom52
+
+拉代码方法：
+curl http://192.168.1.30/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.30/repo/hct-mtk/hct6753-65C-l1-mp3-v2.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t823_33gu_256g24g_53
+
+编译eng版本：./distribute -p dists/targets/t823_33gu_256g24g_53/t823k-cq-5171-33gu-fhd-256g24g-bom52 && ./distribute --mtkt new && ./distribute -b 
+编译user版本： 在服务器上编译 ./distribute -p dists/targets/t823_33gu_256g24g_53/t823k-cq-5171-33gu-fhd-256g24g-bom52 --auto && ./distribute -b 
+编译fota升级包： source build/envsetup.sh 列表  
+     cat dists.log  查看lunch后面的 编译的芯片类型 
+    lunch full_hct6735m_35gu_l-user  
+    make otapackage && ./distribute -b   //生成ota包
+
+
+
+
+

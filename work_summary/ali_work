@@ -1,0 +1,384 @@
+============================================ali项目===============================================================
+
+拉代码 ：（与android相同，非烧录相同）
+curl http://192.168.1.29/repo/repo >repo && chmod +x repo && ./repo init -u http://192.168.1.29/repo/hct-mtk/6737-alios5.1.0/manifests.git/ && ./repo sync && ./distribute --update --all
+
+//下载具体分支
+ ./distribute --init dists/targets/t525_33pgc_64g8g
+
+  非烧录eng版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 eng adb new true && ./imgout
+非烧录  user版本
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 user adb new true && ./imgout
+
+./distribute --clean && ./distribute --update --all && ./distribute -p dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/ && ./mk_aliphone_sign.sh ali6735m_35gc_a_l1 user adb new true otapackage && ./imgout
+
+版本编好了用这个命令打包一下，tar zcvf t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21-R07-0504.tar.gz release-ali6735m_35gc_a_l1/ 编译好之后再发布
+
+名称不能出现空格，否则会报错
+HCT_PRODUCT_MODEL = Haier_Y105-TL
+HCT_PRODUCT_BRAND = Haier_Y105-TL
+
+阿里如何制作default 主题包
+1.   从UED那里得到一个一般的主题包 例如 alixxx.zip
+2.   复制主题包到TDT工具同一目录， 双击运行TDT.jar
+3.   文件à打开主题à选取zip包， 再关闭TDT ， 会在同一目录下生成alixxx 目录。 
+4.   修改该目录下两个文件: 
+a.   Icons/AndroidManifest.xml 中 <manifest package="iconstheme" 改为  <manifest package="iconOrigin"
+b.   icons\res\values\dimens.xml 中添加两行：
+<dimen name="max_icon_size">60.0dip</dimen>
+<dimen name="max_shadow_size">64.0dip</dimen>
+5.   打开TDT， 打开工程, 选择 alixxx 目录, 然后 文件à打包 , 会在alixxx目录中生成“主题.zip” 
+6.   把“主题.zip”解压，就是default主题。
+
+overlays 目录下config文件  首先查看主干相关属性值
+<bool name="config_gyroscopesensor_available">true</bool>   //陀螺义
+
+<bool name="config_Msensor_available">false</bool>	//地磁
+
+
+
+工厂测试模式手机串号功能 需要修改主干内容：
+
+vendor/haocheng/proprietary/packages/下的
+FactoryMode/AndroidManifest.xml 		diff | blob | history
+FactoryMode/res/values/strings.xml 		diff | blob | history
+FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
+这三个地方
+
+
+AndroidManifest.xml 
+ -                <data android:scheme="android_secret_code" android:host="8688" />
++                <data android:scheme="android_secret_code" android:host="@string/hct_change_imei_secret_code" />
+
+
+strings.xml 
++    <string name="hct_change_imei_secret_code" translatable="false">8688</string>
+
+TestBroadcastReceiver.java
+--- a/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
++++ b/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java
+@@ -30,6 +30,7 @@ public class TestBroadcastReceiver extends BroadcastReceiver {
+         String factoy = context.getResources().getString(R.string.factorymode_code);
+         String factoy_custom = context.getResources().getString(R.string.factorymode_code_custom);
+         String aging_test = context.getResources().getString(R.string.aging_test_code);
++        String imei_code = context.getResources().getString(R.string.hct_change_imei_secret_code);
+        // process *#*#3646633#*#*
+                Uri engineerUri = Uri.parse("android_secret_code://"+engineer);
+        // process *#*#66#*#*
+@@ -41,7 +42,7 @@ public class TestBroadcastReceiver extends BroadcastReceiver {
+        // process *#*#8615#*#*
+                Uri querySystemInfoUri = Uri.parse("android_secret_code://8615");
+                // process *#*#8688#*#*
+-               Uri queryGPRSInfoUri = Uri.parse("android_secret_code://8688");
++               Uri queryGPRSInfoUri = Uri.parse("android_secret_code://" + imei_code);
+                /* add by shaolianjie s  20141111 */
+                String aux_engineer = context.getResources().getString(R.string.aux_engineer_code);
+                String aux_factory = context.getResources().getString(R.string.aux_factory_code);
+
+
+把string.xml 文件复制到分支同等目录下 <string name="hct_change_imei_secret_code" translatable="false">8688</string>  把值更改为需求值
+
+下拉新的 分支
+./distribute --add  dists/targets/branch name
+
+修改默认字体大小
+device/alibaba/项目名/ProjectConfig.mk文件
+HCT_DEFAULT_FONT_SIZE = 3
+
+更改  设置-存储-详细信息- 下的其他改为 系统空间及其他 需要修改的语言英语，繁体
+/code/ali/6753_c2k_alios3.2.0_01/packages/apps/Settings/res/values-zh-rCN/strings.xml  文件中的
+  
+需要在分支的 /code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/packages/apps/Settings/res/values-zh-rCN 将主干的strings.xml 复制过来 
+<string name="memory_media_misc_usage" msgid="235452944021647124">"其他"</string>更改成需求的值 
+
+
+details.availSize  
+ - dcimSize 图片及视频
+- musicSize    音乐
+ - downloadsSize   下载内容
+- details.cacheSize  缓存数据
+ - details.miscSize 其他存储空间变量 
+
+拨号盘输入*#1030#只显示内部版本号，格式为： Haier Y105-TL-H01A-S03-CHN-编译时间  分支下更改以下内容
+
+1.  vendor/haocheng/proprietary/packages/FactoryMode/AndroidManifest.xml 增加
+    <data android:scheme="android_secret_code" android:host="@string/hct_query_internal_version_code" />
+2. vendor/haocheng/proprietary/packages/FactoryMode/src/com/mediatek/factorymode/TestBroadcastReceiver.java  增加两段代码
+  a.  Uri queryInternalversionUri = Uri.parse("android_secret_code://"+context.getResources().getString(R.string.hct_query_internal version_code));
+
+  b.  添加一个判断语句：
+    } else if (uri.equals(queryInternalversionUri)){
+                    Log.d("TestBroadcastReceiver", "TestBroadcastReceiver test queryInternalversionUri");
+                    Intent i = new Intent(Intent.ACTION_MAIN);
+					i.setComponent(new ComponentName(
+							"com.mediatek.factorymode",
+							"com.mediatek.factorymode.versioninfo.VernoInfo"));
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(i);
+3.   vendor/haocheng/proprietary/packages/FactoryMode/res/values/strings.xml 增加
+     <string name="hct_query_internal_version_code" translatable="false">1030</string>
+4. vendor/haocheng/proprietary/packages/FactoryMode/res/layout/vernoinfo.xml 删除布局中的外部版本号的相关代码
+5.  /vendor/haocheng/proprietary/packages/FactoryMode/src/com/mediatek/factorymode/versioninfo/VernoInfo.java  删除外部版本号相关代码
+
+CUSTOM_BUILD_VERNO = R02  内部版本号
+MTK_BUILD_VERNO = H01-S03-CHN-20160323  外部版本号
+
+虚拟home键 system.prop 文件  qemu.hw.mainkeys=1 
+
+模块编译   快速验证（前提是已经此环境编译过）
+source build/envsetup.sh
+cat dists.log 
+lunch full_ali6735m_35gc_a_l1-eng
+mmm packages/apps/Settings/  
+以上操作步骤完成后会在out目录下生成一个Settings.apk 文件，然后把此apkpush到手机看效果
+
+
+阿里的系统资源
+阿里的系统资源基本都放在device/alibaba/common/resources/里面
+
+（1）默认铃声
+device/alibaba/common/resources/default.mk里面
+#Config special sounds
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.config.notification_sound=02_Notification.ogg  \
+    ro.config.alarm_alert=01_10MinsLife.ogg \
+    ro.config.ringtone=ringer.mp3 \
+    ro.config.message_alert=01_Message.ogg
+这里如果需要更换，可以修改写成对应的文件名称即可，如果要新添加，可以按照我们安卓上面的方式添加。
+
+（2）开关机动画、开关机铃声
+阿里默认开机动画：device/alibaba/common/resources/aliyun_bootanimation.zip
+阿里默认开关机铃声：device/alibaba/common/resources/sounds/audio/On.ogg  Off.ogg
+阿里没有关机动画，如果要客制化关机动画，需要改三个地方：
+a，system.prop里面加入ro.operator.optr=CUST；
+b，device/alibaba/common/resources/BootAnimation.mk里面添加拷贝脚本
+PRODUCT_COPY_FILES += \
+   $(LOCAL_PATH)/shutanimation.zip:system/media/shutanimation.zip
+c，对应路径下添加关机资源包
+
+（3）型号、品牌、厂商名称
+a，device/alibaba/ali6735m_35gc_l/custom.conf
+b，build/tools/buildinfo.sh里面
+echo "ro.product.model=乐6S"
+echo "ro.product.brand=AoleDior"
+echo "ro.product.manufacturer=AoleDior"
+
+/device/haocheng/hct6580_weg_a_l/system.prop中修改qemu.hw.mainkeys=0值为０时在屏幕上有选项，home，回退按键，当手机设备自带有这些时，把值设置为１，
+则不会在屏幕上显示这些按键。ro.sf.lcd_density=240屏幕分辨率调整，240为qhd的屏幕，当屏幕分辨率为hd时，改为320.
+当然，也需要在自己项目的/device/haocheng/hct6580_weg_a_l/system.prop中去修改这些配置，编译时回覆盖到主分支上
+
+来电短信铃声
+./device/alibaba/common/resources/sounds/YunosAudio.mk:        $(LOCAL_PATH)/incomingcall/01_Clouds.ogg:system/media/audio/ringtones/01_Clouds.ogg \
+./device/alibaba/common/resources/default.mk:    ro.config.ringtone=01_Clouds.ogg \
+
+./frameworks/base/core/res/res/xml/ali_internal_audio_display_name.xml:  <name title="01_Clouds" resid="01_Clouds" />
+./frameworks/base/core/res/res/values-zh-rCN/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">云霄</string>
+./frameworks/base/core/res/res/values/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">Clouds</string>
+./frameworks/base/core/res/res/values-zh-rTW/ali_internal_audio_display_name_strings.xml:    <string name="01_Clouds">雲霄</string>
+多核观察器
+MTK_MULTICORE_OBSERVER_APP 
+
+add： /code1/6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525g-ouqi-s03-hd-33fpgc-128g16g-alios-volte-bom10/device/alibaba/common/resources/theme
+
+默认锁屏壁纸--lockwallpaper（无后缀名）
+/device/alibaba/common/resources/theme/default/lockwallpaper
+
+默认桌面壁纸--wallpapers（无后缀名）
+/device/alibaba/common/resources/theme/default/wallpapers
+
+当前使用主题预览
+/device/alibaba/common/resources/theme/default/previews/
+
+更改主题包（主题包有专用工具处理）
+/device/alibaba/common/resources/theme/default/icons
+
+预制桌面及锁屏壁纸
+/device/alibaba/common/resources/theme/inner_wallpaper/
+
+参考主题的icon
+/code/hct6753-65C-l1-mp3-v2.0/vendor/haocheng/proprietary/packages/HctThemes/theme-res-Golden
+
+长按home键打开手电筒功能关闭
+aliyunos/packages/apps/AliLockScreen/v21/com/android/keyguard/AliKeyguardHostView.java
+//此判断语句是长按home键实现打开手电筒的功能
+f(false) { //(TorchHelper.TORCH_ENABLE) {
+            if (keyCode == KeyEvent.KEYCODE_HOME && mScreenOn) {
+
+
+工厂测试模式更改
+device/alibaba/common/resources/custom/engineer.xml在工厂测试模式的AndroidManifest.xml中改权限具体参考分支6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21
+
+修改默认锁屏天气预报是关闭状态
+frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+<integer name="def_lockscreen_weather_anim">0</integer>  0是默认关闭  1是默认打开
+
+相机默认尺寸4： 3  或16：9
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values/config.xml
+
+相机闪光灯默认电量低于15% 提示电量过低关闭闪光灯
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values/config.xml
+<bool name="config_disable_flash_when_lowpower">true</bool>
+
+
+主界面 时间插件 请更换成 天气时钟 4X1
+/code1/6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525g-ouqi-s03-hd-33fpgc-128g16g-alios-volte-bom10/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/HomeShell/res/values/config.xml
+ <!--add sunyuepeng 20160305-->
+
+    <string name="clock_apollo_4x1" translatable="false">"clock2_4x1"</string> 
+相机前置摄像头默认打开 
+/code/ali/6753_c2k_alios3.2.0_testBom17/dists/targets/t525_33pgc_64g8g/t525m-xy-h01a-33cpgc-hd-64g8g-bom17-alios-volte/vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/AliCamera/res/values
+
+修改launcher字体大小
+vendor/haocheng/proprietary/overlays/localization/zh-rCN/aliyunos/packages/apps/HomeShell/res/values/dimens.xml
+ <dimen name="workspace_icon_text_size">11sp</dimen>
+    <dimen name="workspace_icon_text_size_small">8sp</dimen>
+
+
+ 修改阿里相机布局
+/code/ali/6753_c2k_alios3.2.0_testBom21/aliyunos/packages/apps/AliCamera/res/layout/camera_controls.xml
+
+/code/ali/6753_c2k_alios3.2.0_testBom21/aliyunos/packages/apps/AliCamera/src/com/yunos/camera/ui/CameraControls.java
+
+
+
+//			Dialog dialog = new BootCluesDialog(context);
+//			dialog.show();
+			AlertDialog.Builder builder = new Builder(context);
+			builder.setMessage(context.getResources().getString(R.string.imei_number_clues));
+			builder.setTitle("提示");
+			builder.setPositiveButton("知道了", new OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+					dialog.dismiss();
+				}
+			});
+			
+builder.setNegativeButton("取消", new OnClickListener() {
+	
+	@Override
+	public void onClick(DialogInterface dialog, int which) {
+		// TODO Auto-generated method stub
+		dialog.dismiss();
+	}
+});
+			 builder.create().show();
+
+
+
+阿里修改桌面将文件收到文件夹中
+aliyunos/packages/apps/HomeShell/res/xml/default_workspace.xml
+<folder
+        launcher:screen="1"
+        launcher:x="3"
+        launcher:y="1"
+        launcher:title="@string/title_folder_tools" >
+        
+        <favorite
+            launcher:packageName="com.yunos.compass"   //对应apk的包名
+            launcher:className="com.yunos.compass.CompassActivity"  //对应的apk的类名
+            launcher:screen="0"    
+            launcher:x="2"
+            launcher:y="0"
+            launcher:container="1" />
+
+    </folder>
+
+把需要放入文件夹中的apk包名类名 写在对应的位置
+
+合入音频文件
+vendor/mediatek/proprietary/custom/common/cgen/cfgdefault/
+
+主干上：/vendor/mediatek/proprietary/custom/common/cgen/cfgdefault/audio_ver1_volume_custom_default.h文件是对*#*#8612#*#*下的参数修改，
+例如：
+#define VER1_AUD_VOLUME_SPH \　　　这个是对speech的修改
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\　　对正常模式(Normal Mode)的修改　　数字分别对应level0,level1, ....后面的０表示没有这个level
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\    对耳机模式(Headset mode)的修改
+    72,84,96,108,120,132,144,0,0,0,0,0,0,0,0,\    对免提模式(Louderspeaker mode)的修改
+    40,52,64,76,88,100,112,0,0,0,0,0,0,0,0　　　　对Headset_LoudSpeaker Mode的修改
+
+对audio---Speech Enhancement----- Headset Mode  Parameter 11  4613　的修改是在相同目录下的sph_coeff_default.h里面，对照手机找到相应的位置就可以了。
+合入频响也是把频响的库文件放到这个目录下
+以上所有的修改都要在自己目录下进行，在自己分支建立相应的路径，放置修改和加入的文件（注意不是放在overlay里面）
+
+部分手机不支持OTG在设置--存储--详细信息下去掉外部USB存储器
+参考分支：/code/ali/6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21
+/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21/device/mediatek/common/overlay
++++sd_ex_otg 文件夹 去掉外部USB存储器布局
++++sd_in_ex_otg 文件夹 去掉外部USB存储器详细信息的布局
+
+开机提示如果手机未写imei号提示未写
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21/aliyunos/packages/apps/AliSystemUI/src/com/android/systemui/statusbar/phone/PhoneStatusBar.java
+注意需要两个权限否则会报错
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+具体修改参考分支6753_c2k_alios3.2.0/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21/aliyunos/packages/apps/AliSystemUI/
+
+文件管理可用空间不能及时更新的问题
+/code/ali/6753_c2k_alios3.2.0_01/dists/targets/t525_33pgc_128g16g/t525m-xinyu-h01a-hd-33pgc-128g16g-alios-volte-bom21/aliyunos/packages/apps/AliFileBrowser/src/com/aliyunos/filemanager/providers/FilelistManager.java
+需要在public long GetTotleAvailSize()方法中添加一段更新可用空间的代码即可
+//qiaojiali 
+mAvailMemory = 0;
+        for(StorageVolume root : mVolumes)
+        {
+            StatFs sf = null;
+            try {
+            /*YunOS BEGIN PB*/
+            // ##module:(AliDeskClock) ##author:qingju.xj@alibaba-inc.com
+            // ##BugID:(6041118) ##date:2015-06-02
+            if (!(USBOTGPATH.equalsIgnoreCase(root.getPath())))
+                {
+                   sf = new StatFs(root.getPath());
+                   //Log.d(TAG, "Path:"+root.getPath());
+                }
+            /*YunOS END PB*/
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+
+            if(sf != null)
+            {
+                long blockSize = sf.getBlockSize();
+                long blockCount = sf.getBlockCount();
+                long availCount = sf.getAvailableBlocks();
+             //   mTotleMemory += blockSize*blockCount;
+                mAvailMemory += availCount*blockSize;
+                //Log.d(TAG, "block大小:"+ blockSize+",block数目:"+ blockCount+",总大小:"+blockSize*blockCount/1024+"KB");
+                //Log.d(TAG, "可用的block数目：:"+ availCount+",剩余空间:"+ availCount*blockSize/1024+"KB");
+            }
+        }
+
+//qiaojiali
+
+设置开启手势体感双指调节音量，三指截图 及三指向上滑动进入相机三个功能无效
+projectConfig.mk 开关
+HCT_MULTI_FINGER_GESTURE_SUPPORT = yes
+
+cta  编译命令
+3.2.0编译命令
+./dists/scripts/mk_aliphone.sh ali6735m_35gc_a_l1 eng adb new YUNOS_SUPPORT_CTA=yes
+./imgout
+
+5.1.0编译命令
+./dists/scripts/mk_aliphone.sh ali6737m_35g_m0 eng adb new false YUNOS_SUPPORT_CTA=yes APR_MODE=off
+
+
+T635欧奇   品牌：欧奇        CTA 型号：G13
+
+             MT6737 三模 GSM三频（900/1800/1900）+TD34/39+ TDD-LTE 4频（BAND38/39/40/41）
+ 
+
+     软件版本号：G13_V1.0
+     检配置：
+           双卡双待机，WIFI支持    GPRS支持   支持EDGE  
+           支持FM   支持HSDPA     不支持指纹识别
+           支持HSUPA   支持蓝牙 支持GPS    支持AGPS      
+           支持VOLTE语音通话  支持VOLTE视频通话 
+阿里YunOS 5.1.1  flash:64Gb+8Gb
+三大件信息:
+
+
+
+
